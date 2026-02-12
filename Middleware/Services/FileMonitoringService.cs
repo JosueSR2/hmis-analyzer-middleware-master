@@ -1,54 +1,74 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
-public class FileMonitoringService
+namespace Middleware.Services.Conections
 {
-    private readonly string _watchFolder;
-    private FileSystemWatcher _watcher;
-    private readonly MachineReaderService _machineReader;
-    private readonly AnalyzerService _analyzerService;
-
-    public FileMonitoringService(
-        string watchFolder,
-        MachineReaderService machineReader,
-        AnalyzerService analyzerService)
+    public class FileMonitoringService
     {
-        _watchFolder = watchFolder;
-        _machineReader = machineReader;
-        _analyzerService = analyzerService;
-    }
+        private readonly string _watchFolder;
+        private readonly AnalyzerService _analyzerService;
+        private FileSystemWatcher? _watcher;
 
-    public void Start()
-    {
-        if (!Directory.Exists(_watchFolder))
-            Directory.CreateDirectory(_watchFolder);
-
-        _watcher = new FileSystemWatcher(_watchFolder);
-        _watcher.Filter = "*.txt"; // Ajusta según extensión real
-        _watcher.Created += OnNewFile;
-        _watcher.EnableRaisingEvents = true;
-    }
-
-    private async void OnNewFile(object sender, FileSystemEventArgs e)
-    {
-        try
+        public FileMonitoringService(string watchFolder, AnalyzerService analyzerService)
         {
-            Console.WriteLine($"Nuevo archivo detectado: {e.FullPath}");
-
-            // Asegura que el archivo esté listo para leer
-            await Task.Delay(500);
-
-            // Leer datos crudos
-            string rawData = _machineReader.Read(e.FullPath);
-
-            // Analizar y enviar
-            await _analyzerService.Process(rawData);
-
-            Console.WriteLine($"Archivo procesado: {e.Name}");
+            _watchFolder = watchFolder;
+            _analyzerService = analyzerService;
         }
-        catch (Exception ex)
+
+        public void Start()
         {
-            Console.WriteLine($"Error procesando archivo: {ex.Message}");
+            if (!Directory.Exists(_watchFolder))
+            {
+                Directory.CreateDirectory(_watchFolder);
+            }
+
+            _watcher = new FileSystemWatcher
+            {
+                Path = _watchFolder,
+                Filter = "*.txt", // puedes cambiar a *.dat si tu equipo usa ese formato
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+            };
+
+            _watcher.Created += OnFileCreated;
+            _watcher.EnableRaisingEvents = true;
+
+            Console.WriteLine($"Monitoreando carpeta: {_watchFolder}");
+        }
+
+        private async void OnFileCreated(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                // Esperar un poco para asegurar que el archivo termine de copiarse
+                await Task.Delay(500);
+
+                string rawData = await File.ReadAllTextAsync(e.FullPath);
+
+                Console.WriteLine($"Archivo detectado: {e.Name}");
+
+                await _analyzerService.Process(rawData);
+
+                // Opcional: eliminar archivo después de procesar
+                File.Delete(e.FullPath);
+
+                Console.WriteLine($"Archivo procesado y eliminado: {e.Name}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error procesando archivo {e.Name}: {ex.Message}");
+            }
+        }
+
+        public void Stop()
+        {
+            if (_watcher != null)
+            {
+                _watcher.EnableRaisingEvents = false;
+                _watcher.Dispose();
+            }
+
+            Console.WriteLine("Monitoreo detenido.");
         }
     }
 }

@@ -1,51 +1,71 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Middleware.Encoders;
+using Middleware.Models;
+using Middleware.Services.Conections;
 
-public class AnalyzerService
+namespace Middleware.Services
 {
-    private readonly Parser _parser;
-    private readonly JsonEncoder _jsonEncoder;
-    private readonly HL7Encoder _hl7Encoder;
-    private readonly ApiClientService _apiClient;
-
-    public AnalyzerService(
-        Parser parser,
-        JsonEncoder jsonEncoder,
-        HL7Encoder hl7Encoder,
-        ApiClientService apiClient)
+    public class AnalyzerService
     {
-        _parser = parser;
-        _jsonEncoder = jsonEncoder;
-        _hl7Encoder = hl7Encoder;
-        _apiClient = apiClient;
-    }
+        private readonly JsonEncoder _jsonEncoder;
+        private readonly HL7Encoder _hl7Encoder;
+        private readonly ApiClientService _apiClient;
 
-    public async Task Process(string rawData)
-    {
-        // 1) Parsear a resultados
-        List<LabResult> results = _parser.Parse(rawData);
-
-        if (results == null || results.Count == 0)
+        public AnalyzerService(
+            JsonEncoder jsonEncoder,
+            HL7Encoder hl7Encoder,
+            ApiClientService apiClient)
         {
-            Console.WriteLine("No se encontraron resultados válidos.");
-            return;
+            _jsonEncoder = jsonEncoder;
+            _hl7Encoder = hl7Encoder;
+            _apiClient = apiClient;
         }
 
-        // 2) Convertir a JSON
-        string jsonPayload = _jsonEncoder.Encode(results);
-
-        // 3) Convertir a HL7 si necesitas HL7 también
-        string hl7Payload = null;
-        foreach (var r in results)
+        public async Task Process(string rawData)
         {
-            hl7Payload += _hl7Encoder.Encode(r) + "\r\n";
+            try
+            {
+                if (string.IsNullOrWhiteSpace(rawData))
+                {
+                    Console.WriteLine("Datos vacíos recibidos.");
+                    return;
+                }
+
+                // Parsear datos ASTM
+                List<LabResult> results = Parser.ParseASTM(rawData);
+
+                if (results == null || results.Count == 0)
+                {
+                    Console.WriteLine("No se encontraron resultados válidos.");
+                    return;
+                }
+
+                Console.WriteLine($"Se encontraron {results.Count} resultados.");
+
+                // Convertir a JSON
+                string jsonPayload = _jsonEncoder.Encode(results);
+
+                // (Opcional) Generar HL7
+                string hl7Payload = string.Empty;
+                foreach (var result in results)
+                {
+                    hl7Payload += _hl7Encoder.Encode(result) + "\r\n";
+                }
+
+                // Enviar a API
+                await _apiClient.SendResultsAsync(jsonPayload);
+
+                Console.WriteLine("Datos enviados correctamente a la API.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en AnalyzerService: {ex.Message}");
+            }
         }
-
-        // 4) Enviar JSON por API
-        await _apiClient.SendResultsAsync(jsonPayload);
-
-        Console.WriteLine("Datos enviados a API correctamente.");
     }
 }
+
+
 

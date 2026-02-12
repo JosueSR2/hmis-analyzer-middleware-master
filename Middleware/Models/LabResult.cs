@@ -2,12 +2,14 @@ namespace Middleware.Models
 {
     public class LabResult
     {
-        public string SampleId { get; set; }
-        public string TestCode { get; set; }
-        public string Value { get; set; }
-        public string Units { get; set; }
-        public string ReferenceRange { get; set; }
-        public string AnalyzerName { get; set; }
-        public DateTime ResultDate { get; set; }
+        public string SampleId { get; set; } = string.Empty;
+        public string TestCode { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public string Units { get; set; } = string.Empty;
+        public string ReferenceRange { get; set; } = string.Empty;
+        public string Flag { get; set; } = string.Empty;
     }
 }
+
+
+

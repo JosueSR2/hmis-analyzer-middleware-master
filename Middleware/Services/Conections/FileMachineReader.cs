@@ -1,15 +1,32 @@
+using System.Collections.Generic;
 using System.IO;
 
-public class MachineReaderService
+namespace Middleware.Services.Conections
 {
-    public string Read(string fullFilePath)
+    public class FileMachineReader
     {
-        // Leer todo el contenido
-        string content = File.ReadAllText(fullFilePath);
+        private readonly string _path;
 
-        // Aquí podrías mover / archivar el archivo después de leerlo:
-        // File.Move(fullFilePath, Path.Combine("Processed", Path.GetFileName(fullFilePath)));
+        public FileMachineReader(string path)
+        {
+            _path = path;
+        }
 
-        return content;
+        public IEnumerable<string> ReadFiles()
+        {
+            if (!Directory.Exists(_path))
+                yield break;
+
+            var files = Directory.GetFiles(_path, "*.txt");
+
+            foreach (var file in files)
+            {
+                string content = File.ReadAllText(file);
+                yield return content;
+
+                // Opcional: borrar después de procesar
+                File.Delete(file);
+            }
+        }
     }
 }

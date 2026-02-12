@@ -1,20 +1,57 @@
-public class Parser
+using System;
+using System.Collections.Generic;
+using Middleware.Models;
+
+namespace Middleware.Services.Conections
 {
-    public static List<string> ParseASTM(string rawData)
+    public static class Parser
     {
-        List<string> results = new();
-        var lines = rawData.Split('\n');
-        foreach(var line in lines)
+        public static List<LabResult> ParseASTM(string rawData)
         {
-            if(line.StartsWith("R|")) // Segmento de resultado
+            var results = new List<LabResult>();
+
+            if (string.IsNullOrWhiteSpace(rawData))
+                return results;
+
+            var lines = rawData.Split('\n');
+
+            string currentSampleId = string.Empty;
+
+            foreach (var line in lines)
             {
-                var fields = line.Split('|');
-                string testName = fields[2];
-                string value = fields[3];
-                results.Add($"{testName}|{value}");
+                var cleanLine = line.Trim();
+
+                // Registro O → Información de muestra
+                if (cleanLine.StartsWith("O|"))
+                {
+                    var fields = cleanLine.Split('|');
+                    if (fields.Length > 2)
+                        currentSampleId = fields[2];
+                }
+
+                // Registro R → Resultado
+                if (cleanLine.StartsWith("R|"))
+                {
+                    var fields = cleanLine.Split('|');
+
+                    if (fields.Length > 4)
+                    {
+                        var result = new LabResult
+                        {
+                            SampleId = currentSampleId,
+                            TestCode = fields[2],
+                            Value = fields[3],
+                            Units = fields.Length > 4 ? fields[4] : "",
+                            ReferenceRange = fields.Length > 5 ? fields[5] : "",
+                            Flag = fields.Length > 6 ? fields[6] : ""
+                        };
+
+                        results.Add(result);
+                    }
+                }
             }
+
+            return results;
         }
-        return results;
     }
-    
 }
