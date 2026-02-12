@@ -1,0 +1,8 @@
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/Middleware.FormMain.resources
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/Middleware.Properties.Resources.resources
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/bin/Debug/Middleware.exe.config
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/bin/Debug/Middleware.exe.mdb
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/bin/Debug/Middleware.exe
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/Middleware.exe
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/Middleware.exe.mdb

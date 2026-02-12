@@ -1,0 +1,10 @@
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/bin/Debug/net8.0/HMIS-Middleware.deps.json
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/bin/Debug/net8.0/HMIS-Middleware.dll
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/bin/Debug/net8.0/HMIS-Middleware.pdb
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/HMIS-Middleware.csproj.AssemblyReference.cache
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/HMIS-Middleware.GeneratedMSBuildEditorConfig.editorconfig
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/HMIS-Middleware.csproj.CoreCompileInputs.cache
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/HMIS-Middleware.dll
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/refint/HMIS-Middleware.dll
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/HMIS-Middleware.pdb
+/home/linkdicom/Descargas/hmis-analyzer-middleware-master/Middleware/obj/Debug/net8.0/ref/HMIS-Middleware.dll
