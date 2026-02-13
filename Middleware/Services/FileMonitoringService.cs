@@ -19,44 +19,87 @@ namespace Middleware.Services.Conections
         public void Start()
         {
             if (!Directory.Exists(_watchFolder))
-            {
                 Directory.CreateDirectory(_watchFolder);
-            }
 
             _watcher = new FileSystemWatcher
             {
                 Path = _watchFolder,
-                Filter = "*.txt", // puedes cambiar a *.dat si tu equipo usa ese formato
+                Filter = "*.txt",
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
             };
 
-            _watcher.Created += OnFileCreated;
+            _watcher.Created += async (s, e) => await ProcessFile(e.FullPath);
             _watcher.EnableRaisingEvents = true;
 
             Console.WriteLine($"Monitoreando carpeta: {_watchFolder}");
         }
 
-        private async void OnFileCreated(object sender, FileSystemEventArgs e)
+        private async Task ProcessFile(string filePath)
         {
             try
             {
-                // Esperar un poco para asegurar que el archivo termine de copiarse
-                await Task.Delay(500);
+                await WaitForFileReady(filePath);
 
-                string rawData = await File.ReadAllTextAsync(e.FullPath);
+                Console.WriteLine($"Archivo detectado: {Path.GetFileName(filePath)}");
 
-                Console.WriteLine($"Archivo detectado: {e.Name}");
+                string rawData = await File.ReadAllTextAsync(filePath);
 
-                await _analyzerService.Process(rawData);
+                bool success = await _analyzerService.Process(rawData);
 
-                // Opcional: eliminar archivo después de procesar
-                File.Delete(e.FullPath);
-
-                Console.WriteLine($"Archivo procesado y eliminado: {e.Name}");
+                if (success)
+                {
+                    File.Delete(filePath);
+                    Console.WriteLine("Archivo procesado y eliminado correctamente.");
+                }
+                else
+                {
+                    MoveToErrorFolder(filePath);
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error procesando archivo {e.Name}: {ex.Message}");
+                Console.WriteLine($"Error procesando archivo: {ex.Message}");
+                MoveToErrorFolder(filePath);
+            }
+        }
+
+        private async Task WaitForFileReady(string filePath)
+        {
+            while (true)
+            {
+                try
+                {
+                    using FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+                    break;
+                }
+                catch (IOException)
+                {
+                    await Task.Delay(500);
+                }
+            }
+        }
+
+        private void MoveToErrorFolder(string filePath)
+        {
+            try
+            {
+                string errorFolder = Path.Combine(Path.GetDirectoryName(filePath)!, "Error");
+
+                if (!Directory.Exists(errorFolder))
+                    Directory.CreateDirectory(errorFolder);
+
+                string newPath = Path.Combine(errorFolder, Path.GetFileName(filePath));
+
+                if (File.Exists(newPath))
+                    File.Delete(newPath);
+
+                File.Move(filePath, newPath);
+
+                Console.WriteLine("Archivo movido a carpeta Error.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"No se pudo mover el archivo a Error: {ex.Message}");
             }
         }
 

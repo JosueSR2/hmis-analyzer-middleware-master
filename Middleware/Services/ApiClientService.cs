@@ -1,5 +1,8 @@
+using System;
+using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Middleware.Services
@@ -8,17 +11,46 @@ namespace Middleware.Services
     {
         private readonly HttpClient _httpClient;
 
-        public ApiClientService()
+        public ApiClientService(HttpClient httpClient)
         {
-            _httpClient = new HttpClient();
+            _httpClient = httpClient;
         }
 
-        public async Task SendResultsAsync(string json)
+        public async Task<bool> SendResultAsync(object payload)
         {
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            try
+            {
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // Cambia la URL por la de tu API real
-            await _httpClient.PostAsync("http://localhost:5284/api/results", content);
+                var response = await _httpClient.PostAsync("/api/lab-results", content);
+
+                if (response.IsSuccessStatusCode)
+                    return true;
+
+                switch (response.StatusCode)
+                {
+                    case HttpStatusCode.NotFound:
+                        Console.WriteLine("ERROR 404: Endpoint no encontrado en OpenELIS.");
+                        break;
+
+                    case HttpStatusCode.InternalServerError:
+                        Console.WriteLine("ERROR 500: Error interno en OpenELIS.");
+                        break;
+
+                    default:
+                        Console.WriteLine($"ERROR {(int)response.StatusCode}: {response.ReasonPhrase}");
+                        break;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Excepción al enviar a OpenELIS: {ex.Message}");
+                return false;
+            }
         }
     }
 }
+
